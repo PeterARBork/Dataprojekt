@@ -30,6 +30,7 @@
 %\clearpage
 
 \begin{abstract}
+How will the position and velocity of a one-dimensional particle exposed to elastic collisions evolve in time? This text analyses a particle exposed to collisions with other particles of normally distributed velocities. Time between collisions is exponentially distributed  and depends on the particle speed. The first and second moments are derived analytically and compared to numerical simulations. The results show that hard sphere collisions result in normally distributed velocities and square positions, where the latter evolves in proportion to the square root of time, just like we expect for diffusion processes.
 \end{abstract}
 
 \section{The velocity of a colliding hard sphere}
@@ -72,7 +73,11 @@ In other words, any initial velocity will dissipate and the expected velocity wi
 Here we used the convergence of the geometric series (with $a<1)$. This shows again that any initial velocity will dissipate but towards a constant fluctuation with variance $b^2 \sigma^2 / (1 - a^2)$.
 
 \section{The evolution of time}
-We take the collision frequency to be some $\lambda$ - the literature suggests formulas for gasses and for diluted solutions. The time between two collisions will then be exponentially distributed,
+We take the collision frequency to be some $\lambda$ - the literature suggests formulas for gasses and for diluted solutions. But instead of reading up on that, I guessed it could be something like a mean free path $l$ divided by a 'relative velocity'
+\begin{align}
+    \lambda = \frac{|\bar v - v|}{l}
+\end{align}
+The time between two collisions will perhaps be exponentially distributed,
 \begin{align}
     \Delta t_i \sim \operatorname{Exp}(\lambda) \\
     \langle \Delta t_i \rangle = \lambda^{-1}
@@ -87,7 +92,7 @@ where $\mathcal U(0, 1)$ is the uniform distribution on the interval $[0, 1]$. T
     t_n = \sum_{i=0}^n \Delta t_i
 \end{align}
 
-\section{The particle's trajectory}
+\section{The particle trajectory}
 A particle starting at $x_0$ will follow a trajectory given by the rule
 \begin{align}\label{eq:Deltax}
     x_{n+1} = x_n + v_n \Delta t_n
@@ -131,12 +136,12 @@ We can simulate the equations \eqref{eq:elasticcollision}, \eqref{eq:timeintegra
 
 \begin{figure}
     \centering
-    \includegraphics[width=0.5\linewidth]{results/Gillespiewalk.png}
-    \caption{Hard sphere random walk}
+    \includegraphics[width=0.7\linewidth]{results/HardsphereBrownian.png}
+    \caption{Hard sphere random walk. Grey lines are individual numerical simulations, blue lines are descriptive statistics of those simulations, and orange lines are analytical predictions. The plot on the left starts from $x_0 = 1000$, $v_0 = 0$ and runs $N=1000$ collisions. The plot on the right starts from $x_0=1000$ but non-zero $v_0 = 200$ and runs for 10 collisions. The other parameters were $a=0.5$, $b=0.01$, $l=10$, $\bar v = 100$, $\sigma = 1$, for $N=1000$ collisions in 100 parallel simulations.}
     \label{fig:Gillespiewalk}
 \end{figure}
 
-\bibliographystyle{abbrv}
-\bibliography{kilder}
+%\bibliographystyle{abbrv}
+%\bibliography{kilder}
 
 \end{document}
