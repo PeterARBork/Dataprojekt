@@ -1,78 +1,140 @@
-\documentclass[10pt,reqno, usenames]{article}
-\usepackage[T1]{fontenc}
+\documentclass{article}
 \usepackage[utf8]{inputenc}
-\usepackage[a4paper, hmargin={2.8cm, 2.8cm}, vmargin={2.5cm, 2.5cm}]{geometry}
+\usepackage{mathtools} %loads \usepackage{amsmath}
+\usepackage{bm}
+\usepackage{fullpage}
+\usepackage{siunitx}
+\usepackage{graphicx} % Required for inserting images
+\usepackage{caption}
+\usepackage{subcaption}
 \usepackage{hyperref}
 \hypersetup{
     colorlinks=true,
+    citecolor=blue,
     linkcolor=blue,
-    filecolor=magenta,      
     urlcolor=blue,
 }
-\usepackage{amsmath,amssymb,amsthm} %Matematik
-\usepackage{enumitem} %Lister
-\usepackage[babel,farve, da]{ku-forside} % KU-forside
 
-\newtheorem{saetning}{Sætning}
-\newtheorem{lemma}[saetning]{Lemma}
-\newtheorem{korollar}[saetning]{Korollar}
-\newtheorem{definition}[saetning]{Definition}
+\newcommand{\df}[2]{\frac{\mathrm d #1}{\mathrm d #2}}
+\newcommand{\pf}[2]{\frac{\partial #1}{\partial #2}}
 
-\titel{Projekt n} %Skriv jeres projektnummer (1-8}
-\undertitel{Projektnavn} %Skriv titlen på jeres projekt
-\opgave{Dataprojekt} 
-\forfatter{Gruppe 1A}%Skriv jeres gruppenummer
-\dato{Institut for Matematiske Fag. \today} %"today" skriver automatisk dagens dato. 
-\vejleder{Vejleder: Navn} %Skriv jeres vejleders navn
+\title{Random walk by hard sphere collisions with Gillespie inspired simulation}
+\author{Peter A.~R.\ Bork}
+\date{\today}
 
 \begin{document}
 
 \maketitle
-\newpage
 
-\section*{Gruppemedlemmer}
-\begin{center}
-\begin{tabular}{ p{5cm} |p{1.5cm} }
- \centering Navn &   KUid \\ \hline
- Forfatter 1 & aaa111  \\ \hline 
- Forfatter 2 & aaa111  \\ \hline 
- Forfatter 3 & aaa111  \\ \hline 
- Forfatter 4 & aaa111  \\ \hline 
- Forfatter 5 & aaa111  \\ \hline 
- Forfatter 6 & aaa111  \\ \hline 
-\end{tabular}
-\end{center}
+%\tableofcontents
+%\clearpage
 
-\section*{Abstract}
-Her skriver I et kort resumé på både dansk og engelsk af jeres projekt. Hvert resumé skal ikke fylde mere end en halv side. 
+\begin{abstract}
+\end{abstract}
 
-\newpage
+\section{The velocity of a colliding hard sphere}
+In elastic collisions of hard spheres, the velocities of the particles after the collision can be calculated from their masses and previous velocities. Our focus will be on a heavy particle of mass $m_A$ with velocity $v_n$ before and $v_{n+1}$ after collision with a particle of lower mass $m_B$ and velocity $u_n$.
+\begin{align}\label{eq:elasticcollision}
+    v_{n+1} &= a v_n + b u_n \\
+\end{align}
+where we use
+\begin{align}
+    a &= \frac{m_A - m_B}{m_B + m_A} < 1\\
+    b &= \frac{2m_B}{m_A + m_B} \ll 1
+\end{align}
+The rule above suggests a difference equation for the evolution of particle velocity. We will take the other particle velocities to be normally distributed,
+\begin{align}
+    u_n \sim \mathcal N(0, \sigma^2)
+\end{align}
+For now, the variance $\sigma^2$ is left undetermined (but its $k_B T)$.
 
-\tableofcontents
+We can learn the evolution of expected velocities using induction starting from an initial condition $v_0$.
+\begin{align}
+    \langle v_1 \rangle &= \langle a v_0 + b u_0 \rangle = a v_0 \\
+    \langle v_2 \rangle &= \langle a v_1 + b u_1 \rangle = a^2 v_0 \\
+    \vdots \\
+    \langle v_n \rangle &= a^n v_0 \longrightarrow 0 \quad\text{for } n \longrightarrow \infty
+\end{align}
+In other words, any initial velocity will dissipate and the expected velocity will become zero if given enough time. But what of the expected square velocity? Using again induction
+\begin{align}
+    \langle v_1^2 \rangle &= \langle (a v_0 + b u_0)^2\rangle 
+    = \langle a^2 v_0^2 + 2ab v_0 u_0 + b^2 u_0^2 \rangle
+    = a^2 \langle v_0^2 \rangle + b^2 \sigma^2
+    \\
+    \langle v_2^2 \rangle &= a^2 \langle v_1^2 \rangle + b^2 \sigma^2
+    = a^2(a^2 \langle v_0^2 \rangle + b^2 \sigma^2) + b^2 \sigma^2
+    \\
+    \vdots \\
+    \langle v_n^2 \rangle &= a^{2n}v_0 + b^2 \sigma^2 \sum_{i=0}^n a^{2n}
+    = a^{2n} v_0 + b^2 \sigma^2 \frac{1 - a^{2(n+1)}}{1 - a^2}
+    \longrightarrow \frac{b^2 \sigma^2}{1-a^2} \quad \text{for } n \longrightarrow \infty
+\end{align}
+Here we used the convergence of the geometric series (with $a<1)$. This shows again that any initial velocity will dissipate but towards a constant fluctuation with variance $b^2 \sigma^2 / (1 - a^2)$.
 
-\newpage
+\section{The evolution of time}
+We take the collision frequency to be some $\lambda$ - the literature suggests formulas for gasses and for diluted solutions. The time between two collisions will then be exponentially distributed,
+\begin{align}
+    \Delta t_i \sim \operatorname{Exp}(\lambda) \\
+    \langle \Delta t_i \rangle = \lambda^{-1}
+\end{align}
+In practice, we can compute it with
+\begin{align}\label{eq:Deltat}
+    \Delta t_i = -\lambda^{-1}\ln u^*_i \\
+    u_i^* \sim \mathcal U(0, 1)
+\end{align}
+where $\mathcal U(0, 1)$ is the uniform distribution on the interval $[0, 1]$. Time then progresses such that
+\begin{align}\label{eq:timeintegral}
+    t_n = \sum_{i=0}^n \Delta t_i
+\end{align}
 
-\section{Introduktion}
+\section{The particle's trajectory}
+A particle starting at $x_0$ will follow a trajectory given by the rule
+\begin{align}\label{eq:Deltax}
+    x_{n+1} = x_n + v_n \Delta t_n
+\end{align}
+Since the velocity and the collision-free time are take to be independent here, we have
+\begin{align}
+    \langle x_{n+1} \rangle = \langle x_n \rangle + \lambda^{-1} \langle v_n \rangle
+    \longrightarrow \langle x_n \rangle \quad \text{for } n \longrightarrow \infty
+\end{align}
+In other words, when any initial velocity dies down, the particle has a constant expected position.
 
-Nu kan i begynde jeres rapport. 
-Når I undervejs har brugt en kilde, skal I skrive kildeinformationen ind i filen kilder.bib og når I vil henvise til den i teksten,  skal I bruge "cite" \cite{bog1}. (Se LATEX-kode). Hvis I ønsker at få en kilde med i litteraturlisten uden at henvise til den i teksten, kan I bruge "nocite" \nocite{hjemmseide1}. (Se LATEX-kode).  Hvis I vil læse mere om forskellige .bib formater, kan I kigge her: \href{https://verbosus.com/bibtex-style-examples.html}{https://verbosus.com/bibtex-style-examples.html}
+The expected square position is 
+\begin{align}
+    \langle x_{n+1}^2 \rangle &= \langle (x_n + v_n \Delta t )^2 \rangle
+    = \langle x_n^2 + 2 v_n \Delta t x_n + v_n^2 \Delta t^2 \rangle
+    = \langle x_n^2 \rangle + \langle v_n^2 \rangle \langle \Delta t^2 \rangle \\
+    &= \langle x_n^2 \rangle + \left(a^{2n} v_0 + b^2 \sigma^2 \frac{1 - a^{2(n+1)}}{1 - a^2}\right) \frac{2}{\lambda^2}
+\end{align}
+We can simplify to the case where $v_0 = 0$ and find another geometric series
+\begin{align}
+    \langle x_{n+1}^2 \rangle - \langle x_n^2 \rangle
+    = 2 \left(\frac{b \sigma}{\lambda}\right)^2 \frac{1 - a^{2(n+1)}}{1 - a^2}
+    = k \left(1 - a^{2(n+1)} \right)
+\end{align}
+where we abbreviate with
+\begin{align}
+    k = 2 \left(\frac{b \sigma}{\lambda}\right)^2
+\end{align}
+The evolution of the expected square position is then
+\begin{align}
+    \langle x_n^2 \rangle
+    &= k \left(n - \sum_{i=0}^n a^{2(n+1)} \right)
+    = k \left(n - a^2 \sum_{i=0}^n a^{2n} \right)
+    = k \left(n - a^2 \frac{1 - a^{2(n+1)}}{1-a^2} \right) \\
+    \langle x_n^2 \rangle &\longrightarrow k \left( n- \frac{a^2}{1 - a^2} \right) \approx k n \quad \text{for } n \longrightarrow \infty
+\end{align}
+The particle will expand its reach with time, growing the variance with approximately $2 ( b \sigma / \lambda)^2$ at every collision.
+
+\section{Numerical solution}
+We can simulate the equations \eqref{eq:elasticcollision}, \eqref{eq:timeintegral}, \eqref{eq:timeintegral}, and \eqref{eq:Deltax} on the computer and compare our predictions for the statistics. This is done in figure~\ref{fig:Gillespiewalk}, where the statistics on simulations are in dark blue and the predicted statistics are light blue. The analysis and numerical implementation agree on the statistics.
 
 \begin{figure}
     \centering
     \includegraphics[width=0.5\linewidth]{results/Gillespiewalk.png}
-    \caption{Gillespie random walk}
+    \caption{Hard sphere random walk}
     \label{fig:Gillespiewalk}
 \end{figure}
-
-
-\section{Appendix}
-Her er appendix. Husk at appendix ikke indgår i bedømmelsen af rapporten, men kan  bruges  til  
-supplerende  udregninger,  figurer  eller  programkode, som  ikke  er nødvendig for forståelsen 
-af rapportens indhold.
-
-
-
-
 
 \bibliographystyle{abbrv}
 \bibliography{kilder}
