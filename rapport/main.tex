@@ -1,6 +1,7 @@
 \documentclass{article}
 \usepackage[utf8]{inputenc}
 \usepackage{mathtools} %loads \usepackage{amsmath}
+\usepackage{amssymb}
 \usepackage{bm}
 \usepackage{fullpage}
 \usepackage{siunitx}
@@ -30,10 +31,11 @@
 %\clearpage
 
 \begin{abstract}
-How will the position and velocity of a one-dimensional particle exposed to elastic collisions evolve in time? This text analyses a particle exposed to collisions with other particles of normally distributed velocities. Time between collisions is exponentially distributed  and depends on the particle speed. The first and second moments are derived analytically and compared to numerical simulations. The results show that hard sphere collisions result in normally distributed velocities and square positions, where the latter evolves in proportion to the square root of time, just like we expect for diffusion processes.
+How will the position and velocity of a one-dimensional particle exposed to elastic collisions evolve in time? This text analyses a particle exposed to collisions with other particles of normally distributed velocities. The numerical simulations takes time between collisions to be exponentially distributed with frequency depending on the particle speed. The first and second moments of velocity and position are derived analytically and compared to numerical simulations. The results show that hard sphere collisions result in normally distributed velocities and square positions, where the latter evolves in proportion to the square root of time, just like we expect for diffusion processes. We then translate this discrete model into the Langevin equation and determine its distributions for the (stationary) velocity and its time-dependent position. Finally we derive the distribution for the speed of the 2-dimensional particle and find that it is the Rayleigh distribution (as expected).
 \end{abstract}
 
-\section{The velocity of a colliding hard sphere}
+\section{The hard sphere model}
+\subsection{The velocity of a colliding hard sphere}
 In elastic collisions of hard spheres, the velocities of the particles after the collision can be calculated from their masses and previous velocities. Our focus will be on a heavy particle of mass $m_A$ with velocity $v_n$ before and $v_{n+1}$ after collision with a particle of lower mass $m_B$ and velocity $u_n$.
 \begin{align}\label{eq:elasticcollision}
     v_{n+1} &= a v_n + b u_n \\
@@ -53,7 +55,7 @@ We can learn the evolution of expected velocities using induction starting from 
 \begin{align}
     \langle v_1 \rangle &= \langle a v_0 + b u_0 \rangle = a v_0 \\
     \langle v_2 \rangle &= \langle a v_1 + b u_1 \rangle = a^2 v_0 \\
-    \vdots \\
+    & \vdots \\
     \langle v_n \rangle &= a^n v_0 \longrightarrow 0 \quad\text{for } n \longrightarrow \infty
 \end{align}
 In other words, any initial velocity will dissipate and the expected velocity will become zero if given enough time. But what of the expected square velocity? Using again induction
@@ -64,6 +66,7 @@ In other words, any initial velocity will dissipate and the expected velocity wi
     \\
     \langle v_2^2 \rangle &= a^2 \langle v_1^2 \rangle + b^2 \sigma^2
     = a^2(a^2 \langle v_0^2 \rangle + b^2 \sigma^2) + b^2 \sigma^2
+    = a^2 \langle v_0^2 \rangle + b^2 \sigma^2 (1 + a^2)
     \\
     \vdots \\
     \langle v_n^2 \rangle &= a^{2n}v_0 + b^2 \sigma^2 \sum_{i=0}^n a^{2n}
@@ -72,8 +75,8 @@ In other words, any initial velocity will dissipate and the expected velocity wi
 \end{align}
 Here we used the convergence of the geometric series (with $a<1)$. This shows again that any initial velocity will dissipate but towards a constant fluctuation with variance $b^2 \sigma^2 / (1 - a^2)$.
 
-\section{The evolution of time}
-We take the collision frequency to be some $\lambda$ - the literature suggests formulas for gasses and for diluted solutions. But instead of reading up on that, I guessed it could be something like a mean free path $l$ divided by a 'relative velocity'
+\subsection{The evolution of time}
+We take the collision frequency to be some $\lambda$ - the literature suggests formulas for gasses and for diluted solutions. But instead of reading up on that, I guessed it could be something like a 'relative velocity' divided by a mean free path $l$.
 \begin{align}
     \lambda = \frac{|\bar v - v|}{l}
 \end{align}
@@ -91,8 +94,9 @@ where $\mathcal U(0, 1)$ is the uniform distribution on the interval $[0, 1]$. T
 \begin{align}\label{eq:timeintegral}
     t_n = \sum_{i=0}^n \Delta t_i
 \end{align}
+The sum of many independent variables is normally distributed.
 
-\section{The particle trajectory}
+\subsection{The particle trajectory}
 A particle starting at $x_0$ will follow a trajectory given by the rule
 \begin{align}\label{eq:Deltax}
     x_{n+1} = x_n + v_n \Delta t_n
@@ -131,15 +135,89 @@ The evolution of the expected square position is then
 \end{align}
 The particle will expand its reach with time, growing the variance with approximately $2 ( b \sigma / \lambda)^2$ at every collision.
 
-\section{Numerical solution}
+\subsection{Numerical solution}
 We can simulate the equations \eqref{eq:elasticcollision}, \eqref{eq:timeintegral}, \eqref{eq:timeintegral}, and \eqref{eq:Deltax} on the computer and compare our predictions for the statistics. This is done in figure~\ref{fig:Gillespiewalk}, where the statistics on simulations are in dark blue and the predicted statistics are light blue. The analysis and numerical implementation agree on the statistics.
 
 \begin{figure}
     \centering
     \includegraphics[width=0.7\linewidth]{results/HardsphereBrownian.png}
-    \caption{Hard sphere random walk. Grey lines are individual numerical simulations, blue lines are descriptive statistics of those simulations, and orange lines are analytical predictions. The plot on the left starts from $x_0 = 1000$, $v_0 = 0$ and runs $N=1000$ collisions. The plot on the right starts from $x_0=1000$ but non-zero $v_0 = 200$ and runs for 10 collisions. The other parameters were $a=0.5$, $b=0.01$, $l=10$, $\bar v = 100$, $\sigma = 1$, for $N=1000$ collisions in 100 parallel simulations.}
+    \caption{Hard sphere random walk. Grey lines are individual numerical simulations, blue lines are descriptive statistics of those simulations, and orange lines are analytical predictions. A slight error seems to have snuck in between the actual and predicted second moment of position. The plot on the left starts from $x_0 = 1000$, $v_0 = 0$ and runs $N=1000$ collisions. The plot on the right starts from $x_0=1000$ but non-zero $v_0 = 200$ and runs for 10 collisions. The other parameters were $a=0.5$, $b=0.01$, $l=10$, $\bar v = 100$, $\sigma = 1$, for $N=1000$ collisions in 100 parallel simulations.}
     \label{fig:Gillespiewalk}
 \end{figure}
+
+\section{The Langevin equation}
+The time between collision $n$ and $n+1$ consists of the duration of the collision itself along with the time spent traveling between collisions. Call it $\Delta t_n$. The average acceleration of the particle over that collision is
+\begin{align}
+    \frac{V_{n+1} - V_n}{\Delta t_n}
+    = \frac{a-1}{\Delta t_n}v_n + \frac{b}{\Delta t_n} u_n
+\end{align}
+If we multiply this with the particle mass $m_A$, we get the net force acting on the particle $F_n$
+\begin{align}
+    m_A \frac{V_{n+1} - V_n}{\Delta t_n}
+    = \frac{m_A (a-1)}{\Delta t_n}v_n + \frac{m_A b }{\Delta t_n} u_n = F_n
+\end{align}
+Let us abbreviate with the following random variables
+\begin{align}
+    \dot v_n &= \frac{v_{n+1} - v_n}{\Delta t_n} \\
+    \eta_n &= \frac{m_A (1 - a)}{\Delta t_n} \\
+    R_n &= \frac{m_A b}{\Delta t_n} u_n
+\end{align}
+This gives a discrete Langevin equation
+\begin{align}
+    \dot v_n = -\eta_n v_n + R_n
+\end{align}
+We can choose to ignore the 'time-dependence' of $\eta_n$ if we think a time-representative value can be chosen. Notice that while its not entirely well-defined what the derivative of noise is, the integral version is more straight forward. 
+\begin{align}
+    v_n - v_0 = \sum_{i=0}^n (-\eta_n v_n + R_n)\Delta t_n
+    \longrightarrow \sum_{i=0}^n m_A b u_n + \int_0^n -\eta_t v\; \mathrm dt
+    \quad \text{for } \Delta t_n \longrightarrow 0
+\end{align}
+When $\Delta t$ is small and we no longer consider it noisy, only the $u_n$ source of noise remains. Proper infinitesimal treatment requires more advanced techniques such as Ito or Stratonovich integrals.
+
+\subsection{Stationary distribution of the velocity}
+We saw in the first section that any initial velocity fades out by factor $\tilde a^n$ where $\tilde a < 1$ and $n$ is the number collisions. After this, the velocity distribution is stationary, not time-dependent. Starting from the Langevin equation and using $\langle R_tR_\tau \rangle = R_0 \delta (t - \tau)$ (where $\delta$ is Dirac's $\delta$-function) we can find that the autocorrelation for the velocity and then the second moment of the velocity $\langle v^2\rangle$ which does not depend on time (when the initial velocity is zero or a short time has been allowed for the initial velocity to fade). 
+
+\section{The distribution of speeds}
+Starting from the assumption (justified above) that each component $u$ and $v$ of the 2-dimensional velocity is independently and normally distributed with zero mean and variance $\sigma^2$, we now show that the resulting speed has a Rayleigh distribution with parameter $\sigma^2$. Well, having done the work below, it turns out the Wikipedia site for the Rayleigh-distribution has a pretty neat derivation that is more direct, so you may not need any of the following. But figuring it out for ourselves is fun anyway.
+
+The speed is naturally defined as $h = \sqrt{u^2 + v^2}$. Each speed corresponds to a whole (infinite) line of points in $(u,v)$-space, which made this derivation slightly tricky for me to think about. I usually remember the change-of-variables (or transformation) rule based on some form of
+\begin{align}
+    1 = \int_0^\infty p_h(h) dh = \int_{-\infty}^\infty \int_{-\infty}^\infty p_{u,v}(u,v) du dv = 1
+\end{align}
+where $p$ is the probability density function for the variable in subscript. The two integrals must hold for any region of the domains, so we need to write a function for this interchange. But the algebra in this was not obvious to me. The geometry helps: The speed is the same on any (centered) circle in $(u,v)$-space. So integrating over $h$-space is like integrating over circles in $(u,v)$-space. First the circles:
+\begin{align}
+    p_{u,v}(u,v) = p_u(u)p_v(v) = p_u(h)^2 = p_v(h)^2
+\end{align}
+In other words, a given speed always has the same probability no matter which combination of velocity components it has. Borrowing some intuition from measure theory we also see that a circle with radius $r$ has a measure $2\pi r$ greater than any of its points (including for example $(u,v) = (r, 0)$). So measured over the circles, the corresponding probability density for the speed, $p_h(h)$ should be
+\begin{align}
+    p_h(h) = 2 \pi h p_u(h)^2
+\end{align}
+I show this result with a bit more care using measure theory in the next section.
+
+\subsection{Measuring the speed}
+Formally speaking, a stochastic variable is defined as a function on a probability measure which consists of a space $\Omega$, a $\sigma$-algebra on the space (usually the Borel) $\mathcal B$, and a probability measure $\mu: \mathcal B \rightarrow R_+$. You can think of the standard Borel $\sigma$-algebra as a set that contains all conceivable subsamples from $\Omega$: the idea is that the measure is a function that tells you `how big' a given region of $\Omega$ is - in other words, gives its probability mass. Our velocity vector belongs in the space $\Omega_V = \mathbb R^2$ with the standard (Borel) $\sigma$-algebra $\mathcal B_V$ and has the (probability) measure 
+\begin{align}
+\mu_V(V) = \int_V p_{u,v}(u,v)dV = \int_V p_u(u)p_v(v)dV
+\end{align}
+where both $p_u$ and $p_v$ are the standard normal distributions with variance $\sigma^2$ and $V$ is any set containing velocity vectors, $V \in \mathcal B_V$.
+
+The speed function $h(u,v)$ defines a new stochastic variable with space $\Omega_H = \mathbb R_+$, the standard $\sigma$-algebra on this domain $\mathcal B_H$, and inherits its probability measure as the `pushforward' from $\mu_V$. This happens with the convoluted-looking but actually natural
+\begin{align}
+    \mu_H(H) = \mu_V(h^{-1}(H))
+\end{align}
+The (probability) measure of a given speed $h$ is the (probability) measure of all those combined velocity-components that match it. The inverse function of the speed gives a set for each speed which is the 2-dimensional `ball' of velocity components: $h^{-1}(s) = B(s) = \{u, v : \sqrt{u^2 + v^2} = s \}$. For a (singleton) speed $s$ the (probability) measure is therefore
+\begin{align}
+p_h(s) = \mu_V(h^{-1}(s)) = \mu_V(B(s)) = \int_{B(s)} p_u(u)p_v(v) dudv = 2 \pi s p_u(s)^2
+\end{align}
+We used here that $p_u(u)p_v(v) = p_u(\sqrt{u^2 + v^2})^2$.
+
+Using the definition of $p_u$ we calculate $p_h$ and find the Rayleigh distribution
+\begin{align}
+    p_u(u) &= (2\pi \sigma^2)^{-1/2}e^{\frac{-u^2}{2\sigma^2}} \\
+    \implies p_h(s) &= 2 \pi s p_u(s)^2 = \frac s{\sigma^2}e^{\frac{s^2}{\sigma^2}}
+\end{align}
+
+
 
 %\bibliographystyle{abbrv}
 %\bibliography{kilder}
